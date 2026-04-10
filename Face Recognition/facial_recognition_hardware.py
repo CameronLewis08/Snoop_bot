@@ -6,7 +6,7 @@ import pickle
 
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")
-with open("encodings.pickle", "rb") as f:
+with open("/home/raspberry/face_rec/repository/Snoop_bot/Face Recognition/encodings.pickle", "rb") as f:
     data = pickle.loads(f.read())
 known_face_encodings = data["encodings"]
 known_face_names = data["names"]
@@ -84,10 +84,10 @@ def process_frame(frame):
         
         face_centroids.append((center_x,center_y))
     
-    try:
+    if len(face_centroids) > 0:
         final_centroid = tuple(np.mean(face_centroids, axis=0))
         final_centroid = tuple(map(int, final_centroid))
-    except:
+    else:
         final_centroid = (0, 0)
     
     # Control the GPIO pin based on face detection
