@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import time
 import pickle
-from gpiozero import LED
 
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")

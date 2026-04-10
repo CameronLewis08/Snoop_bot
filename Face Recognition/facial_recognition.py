@@ -115,7 +115,7 @@ def draw_results(frame):
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, top - 6), font, 1.0, (255, 255, 255), 1)
     
-    cv2.circle(frame, center=final_centroid, radius=5, color=(244, 3, 42))
+    cv2.circle(frame, center=final_centroid, radius=5, color=(42, 3, 244))
     
     return frame
 
