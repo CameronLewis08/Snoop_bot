@@ -1,3 +1,15 @@
+# ================================================================================
+# HOW TO PROPERLY RUN
+#
+# Run these two terminal commands in sequence, one after the other
+#
+# source /opt/ros/humble/setup.bash
+# source face_rec/bin/activate
+# 
+# Then, feel free to use python3 to run facial_recognition_hardware.py
+# Quit using 'q' on your keyboard
+# ================================================================================
+
 import face_recognition
 import cv2
 import numpy as np
@@ -189,4 +201,4 @@ cv2.destroyAllWindows()
 cap.release()
 face_rec_node.destroy_node()
 rclpy.shutdown()
-#output.off()  # Make sure to turn off the GPIO pin when exiting
+#output.off()  # Make sure to turn off the GPIO pin when exitingq
