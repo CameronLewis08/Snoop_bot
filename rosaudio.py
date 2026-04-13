@@ -24,12 +24,13 @@ class AudioNode(Node):
         self.create_subscription(Bool, 'leaving',           self.leaving_cb,           10)
         self.create_subscription(Bool, 'empty',             self.empty_cb,             10)
 
-    def play_track(self, track_num):
+    def play_track(self, track_num, state_name):
         with self.lock:
             if self.is_playing:
                 self.get_logger().info('Already playing, skipping trigger')
                 return
             self.is_playing = True
+            self.current_state = state_name
 
         # Run in background thread so ROS spin loop is never blocked
         t = threading.Thread(target=self._play_and_wait, args=(track_num,), daemon=True)
@@ -57,28 +58,23 @@ class AudioNode(Node):
 
     def recognized_face_cb(self, msg):
         if msg.data and self.current_state != 'recognized_face':
-            self.current_state = 'recognized_face'
-            self.play_track(random.randint(1, 4))
+            self.play_track(random.randint(1, 4), 'recognized_face')
 
     def unrecognized_face_cb(self, msg):
         if msg.data and self.current_state != 'unrecognized_face':
-            self.current_state = 'unrecognized_face'
-            self.play_track(random.randint(5, 8))
+            self.play_track(random.randint(5, 8), 'unrecognized_face')
 
     def multiple_faces_cb(self, msg):
         if msg.data and self.current_state != 'multiple_faces':
-            self.current_state = 'multiple_faces'
-            self.play_track(random.randint(9, 10))
+            self.play_track(random.randint(9, 10), 'multiple_faces')
 
     def leaving_cb(self, msg):
         if msg.data and self.current_state != 'leaving':
-            self.current_state = 'leaving'
-            self.play_track(random.randint(11, 12))
+            self.play_track(random.randint(11, 12), 'leaving')
 
     def empty_cb(self, msg):
         if msg.data and self.current_state != 'empty':
-            self.current_state = 'empty'
-            self.play_track(random.randint(13, 14))
+            self.play_track(random.randint(13, 14), 'empty')
 
     def destroy_node(self):
         self.ser.close()
