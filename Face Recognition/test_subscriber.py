@@ -1,3 +1,15 @@
+# ================================================================================
+# HOW TO PROPERLY RUN
+#
+# Run these two terminal commands in sequence, one after the other
+#
+# source /opt/ros/humble/setup.bash
+# source face_rec/bin/activate
+# 
+# Then, feel free to use python3 to run test_subscriber.py
+# Quit using CTRL+C the terminal
+# ================================================================================
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
