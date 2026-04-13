@@ -3,6 +3,10 @@ import cv2
 import numpy as np
 import time
 import pickle
+import json
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
 
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")
@@ -35,6 +39,16 @@ max_failed_reads = 30
 
 # List of names that will trigger the GPIO pin
 authorized_names = ["aaron", "caleb", "cam", "kit", "tim"]  # Replace with names you wish to authorise THIS IS CASE-SENSITIVE
+
+class FaceRecognitionPublisher(Node):
+    def __init__(self):
+        super().__init__('face_recognition_node')
+        self.publisher_ = self.create_publisher(String, '/face_recognition/data', 10)
+
+    def publish_data(self, centroid, names):
+        msg = String()
+        msg.data = json.dumps({"centroid": list(centroid), "names": names})
+        self.publisher_.publish(msg)
 
 def process_frame(frame):
     global face_locations, face_encodings, face_names, face_centroids, final_centroid
@@ -131,6 +145,9 @@ def calculate_fps():
         start_time = time.time()
     return fps
 
+rclpy.init()
+face_rec_node = FaceRecognitionPublisher()
+
 while True:
     # Capture a frame from camera
     ret, frame = cap.read()
@@ -148,12 +165,10 @@ while True:
     # Get the text and boxes to be drawn based on the processed frame
     display_frame = draw_results(processed_frame)
     
-    # PUBLISH HERE =====================================
+    # Publish face data to ROS2
     data = [final_centroid, face_names]
-    print(data)
-    # Ros stuff goes here
-    
-    # ==================================================
+    face_rec_node.publish_data(final_centroid, face_names)
+    face_rec_node.get_logger().info(str(data))
     
     # Calculate and update FPS
     current_fps = calculate_fps()
@@ -172,4 +187,6 @@ while True:
 # By breaking the loop we run this code here which closes everything
 cv2.destroyAllWindows()
 cap.release()
+face_rec_node.destroy_node()
+rclpy.shutdown()
 #output.off()  # Make sure to turn off the GPIO pin when exiting
