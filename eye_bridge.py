@@ -16,9 +16,6 @@ class EyeBridgeNode(Node):
             self.listener_callback,
             10
         )
-
-        # CHANGE THIS: Match your Nano's port (check Arduino IDE > Tools > Port)
-        # Linux: '/dev/ttyACM0', Windows: 'COM3', Mac: '/dev/cu.usbmodem...'
         self.serial_port = '/dev/ttyACM0' 
         
         try:
@@ -38,10 +35,10 @@ class EyeBridgeNode(Node):
             data = json.loads(msg.data)
             centroid = data["centroid"] # Expects [x, y]
 
-            # Map 640x480 camera resolution to 0-240 screen range
+            # Map 1920x1080 camera resolution to 0-240 screen range
             # We use 60-180 to keep the pupil from hitting the screen edge
-            eye_x = self.map_range(centroid[0], 0, 640, 60, 180)
-            eye_y = self.map_range(centroid[1], 0, 480, 90, 150)
+            eye_x = self.map_range(centroid[0], 0, 1920, 180, 60)
+            eye_y = self.map_range(centroid[1], 0, 1080, 90, 150)
 
             # Format the command for the Arduino: "X150,Y120\n"
             command = f"X{eye_x},Y{eye_y}\n"
