@@ -181,6 +181,7 @@ try:
         # Publish face data to ROS2
         data = [final_centroid, face_names]
         face_rec_node.publish_data(final_centroid, face_names)
+        rclpy.spin_once(face_rec_node, timeout_sec=0)
         face_rec_node.get_logger().info(str(data))
         
         # Calculate and update FPS
