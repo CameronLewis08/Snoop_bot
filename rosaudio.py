@@ -44,7 +44,7 @@ class AudioNode(Node):
             while True:
                 line = self.ser.readline().decode('utf-8', errors='ignore').strip()
                 if not line:
-                    self.get_logger().warn("no DURATION response ")
+                    self.get_logger().warn('No DURATION response from Arduino, releasing playback lock')
                     break
                 if line.startswith('DURATION:'):
                     duration = int(line.split(':')[1])

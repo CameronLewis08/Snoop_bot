@@ -5,8 +5,9 @@ SoftwareSerial mySoftwareSerial(2, 3);
 DFRobot_DF1201S dfplayer;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   mySoftwareSerial.begin(115200);
+  delay(1000);
 
   while (!dfplayer.begin(mySoftwareSerial)) {
     Serial.println("Init failed!");

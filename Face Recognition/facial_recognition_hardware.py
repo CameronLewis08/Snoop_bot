@@ -13,12 +13,15 @@
 import face_recognition
 import cv2
 import numpy as np
+import os
 import time
 import pickle
 import json
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+
+HEADLESS = os.environ.get("SNOOP_HEADLESS", "0") == "1"
 
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")
@@ -160,45 +163,49 @@ def calculate_fps():
 rclpy.init()
 face_rec_node = FaceRecognitionPublisher()
 
-while True:
-    # Capture a frame from camera
-    ret, frame = cap.read()
-    if not ret:
-        failed_reads += 1
-        if failed_reads >= max_failed_reads:
-            print("Camera read failed repeatedly. Exiting.")
-            break
-        continue
-    failed_reads = 0
-    
-    # Process the frame with the function
-    processed_frame = process_frame(frame)
-    
-    # Get the text and boxes to be drawn based on the processed frame
-    display_frame = draw_results(processed_frame)
-    
-    # Publish face data to ROS2
-    data = [final_centroid, face_names]
-    face_rec_node.publish_data(final_centroid, face_names)
-    face_rec_node.get_logger().info(str(data))
-    
-    # Calculate and update FPS
-    current_fps = calculate_fps()
-    
-    # Attach FPS counter to the text and boxes
-    cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30), 
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    
-    # Display everything over the video feed.
-    cv2.imshow('Video', display_frame)
-    
-    # Break the loop and stop the script if 'q' is pressed
-    if cv2.waitKey(1) == ord("q"):
-        break
+try:
+    while True:
+        # Capture a frame from camera
+        ret, frame = cap.read()
+        if not ret:
+            failed_reads += 1
+            if failed_reads >= max_failed_reads:
+                print("Camera read failed repeatedly. Exiting.")
+                break
+            continue
+        failed_reads = 0
+        
+        # Process the frame with the function
+        processed_frame = process_frame(frame)
+        
+        # Publish face data to ROS2
+        data = [final_centroid, face_names]
+        face_rec_node.publish_data(final_centroid, face_names)
+        face_rec_node.get_logger().info(str(data))
+        
+        # Calculate and update FPS
+        current_fps = calculate_fps()
+        
+        if not HEADLESS:
+            # Get the text and boxes to be drawn based on the processed frame
+            display_frame = draw_results(processed_frame)
+            
+            cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            
+            cv2.imshow('Video', display_frame)
+            
+            if cv2.waitKey(1) == ord("q"):
+                break
+except KeyboardInterrupt:
+    pass
+finally:
+    if not HEADLESS:
+        cv2.destroyAllWindows()
+    cap.release()
+    face_rec_node.destroy_node()
+    rclpy.shutdown()
+    #output.off()  # Make sure to turn off the GPIO pin when exitingq
 
-# By breaking the loop we run this code here which closes everything
-cv2.destroyAllWindows()
-cap.release()
-face_rec_node.destroy_node()
-rclpy.shutdown()
-#output.off()  # Make sure to turn off the GPIO pin when exitingq
+
+
