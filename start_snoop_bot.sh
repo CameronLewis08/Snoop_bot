@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 REPO_DIR="$HOME/face_rec/repository/Snoop_bot"
 FACE_REC_SCRIPT="$REPO_DIR/Face Recognition/facial_recognition_hardware.py"
