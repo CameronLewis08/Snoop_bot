@@ -5,24 +5,26 @@ import json
 import serial
 import sys
 
-class EyeBridgeNode(Node):
+class SkeletonEyeBridge(Node):
     def __init__(self):
         super().__init__('eye_bridge_node')
         
-        # Subscribe to the topic your partner defined
         self.subscription = self.create_subscription(
             String,
             '/face_recognition/data',
             self.listener_callback,
             10
         )
+
+        # Port identified via 'ls /dev/lcd' after usbipd attach
         self.serial_port = '/dev/lcd' 
         
         try:
             self.ser = serial.Serial(self.serial_port, 115200, timeout=0.1)
-            self.get_logger().info(f"Connected to Nano on {self.serial_port}")
+            self.get_logger().info(f"SUCCESS: Connected to Nano on {self.serial_port}")
         except Exception as e:
-            self.get_logger().error(f"Could not open serial port: {e}")
+            self.get_logger().error(f"FATAL: Could not open serial port: {e}")
+            self.get_logger().info("Check usbipd attach and 'sudo chmod 666 /dev/ttyACM0'")
             sys.exit(1)
 
     def map_range(self, x, in_min, in_max, out_min, out_max):
@@ -31,27 +33,33 @@ class EyeBridgeNode(Node):
 
     def listener_callback(self, msg):
         try:
-            # Parse the JSON string from the ROS topic
             data = json.loads(msg.data)
-            centroid = data["centroid"] # Expects [x, y]
+            centroid = data["centroid"] # [x, y]
+            x_val = centroid[0]
+            y_val = centroid[1]
 
-            # Map 1920x1080 camera resolution to 0-240 screen range
-            # We use 60-180 to keep the pupil from hitting the screen edge
-            eye_x = self.map_range(centroid[0], 0, 1920, 180, 60)
-            eye_y = self.map_range(centroid[1], 0, 1080, 90, 150)
+            # IDLE DEADZONE: Centered at 960 (half of 1920)
+            # Range: 910 to 1010 (100 pixel window)
+            if 910 <= x_val <= 1010:
+                command = "IDLE\n"
+            else:
+                # INVERTED MAPPING: 
+                # Input X: 0 to 1920 -> Output X: 180 to 60
+                # Input Y: 0 to 1080 -> Output Y: 90 to 150
+                eye_x = self.map_range(x_val, 0, 1920, 180, 60)
+                eye_y = self.map_range(y_val, 0, 1080, 90, 150)
+                command = f"X{eye_x},Y{eye_y}\n"
 
-            # Format the command for the Arduino: "X150,Y120\n"
-            command = f"X{eye_x},Y{eye_y}\n"
-            self.ser.write(command.encode())
-            
-            self.get_logger().info(f"Sent to Eyes: {command.strip()}")
+            if self.ser and self.ser.is_open:
+                self.ser.write(command.encode())
+                self.get_logger().info(f"Target: {command.strip()} (Input: {x_val},{y_val})")
             
         except Exception as e:
-            self.get_logger().error(f"Error: {e}")
+            self.get_logger().error(f"Data Error: {e}")
 
 def main(args=None):
     rclpy.init(args=args)
-    node = EyeBridgeNode()
+    node = SkeletonEyeBridge()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
