@@ -11,7 +11,7 @@ class AudioNode(Node):
     def __init__(self):
         super().__init__('audio_node')
 
-        self.ser = serial.Serial('COM3', 115200, timeout=10)
+        self.ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=10)
         self.is_playing = False
         self.lock = threading.Lock()
         self.current_state = None
@@ -43,12 +43,15 @@ class AudioNode(Node):
 
             while True:
                 line = self.ser.readline().decode('utf-8', errors='ignore').strip()
+                if not line:
+                    self.get_logger().warn('No DURATION response from Arduino, releasing playback lock')
+                    break
                 if line.startswith('DURATION:'):
                     duration = int(line.split(':')[1])
                     self.get_logger().info(f'Track duration: {duration}s')
                     time.sleep(duration + 1)
                     break
-                elif line:
+                else:
                     self.get_logger().info(f'Arduino: {line}')
         except Exception as e:
             self.get_logger().error(f'Playback error: {e}')
