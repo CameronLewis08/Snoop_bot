@@ -16,7 +16,7 @@ class EyeBridgeNode(Node):
             self.listener_callback,
             10
         )
-        self.serial_port = '/dev/ttyACM0' 
+        self.serial_port = '/dev/lcd' 
         
         try:
             self.ser = serial.Serial(self.serial_port, 115200, timeout=0.1)
