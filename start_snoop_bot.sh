@@ -5,6 +5,7 @@ REPO_DIR="$HOME/face_rec/repository/Snoop_bot"
 FACE_REC_SCRIPT="$REPO_DIR/Face Recognition/facial_recognition_hardware.py"
 FACE_STATE_SCRIPT="$REPO_DIR/face_state.py"
 AUDIO_SCRIPT="$REPO_DIR/rosaudio.py"
+EYE_BRIDGE_SCRIPT="$REPO_DIR/eye_bridge.py"
 
 HEADLESS=false
 
@@ -80,6 +81,12 @@ PIDS+=($!)
 
 sleep 1
 
+echo "[start_snoop_bot] Starting eye_bridge..."
+python3 "$EYE_BRIDGE_SCRIPT" &
+PIDS+=($!)
+
+sleep 1
+
 echo "[start_snoop_bot] Starting rosaudio..."
 python3 "$AUDIO_SCRIPT" &
 PIDS+=($!)
@@ -87,7 +94,7 @@ PIDS+=($!)
 echo ""
 echo "============================================="
 echo "  Snoop Bot is running!"
-echo "  Nodes: facial_recognition, face_state, audio"
+echo "  Nodes: facial_recognition, face_state, eye_bridge, audio"
 if [ "$HEADLESS" = true ]; then
 echo "  Mode:  HEADLESS (no GUI window)"
 else
